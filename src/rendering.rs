@@ -1,5 +1,4 @@
 use std::io::{Write, Stdout, stdout};
-use std::ops::Index;
 use crossterm::{execute, queue, terminal, cursor, style::{self, Stylize, StyledContent}};
 
 #[derive(Clone, Copy)]
@@ -8,6 +7,7 @@ pub enum DrawColor {
   Green,
   Red,
   Blue,
+  Border,
 }
 
 pub struct DrawPixel{
@@ -18,8 +18,11 @@ pub struct DrawPixel{
 impl DrawPixel{
   fn get_stylize(&self) -> StyledContent<char> {
     match &self.color{
+      DrawColor::Red => self.character.red(),
+      DrawColor::Blue => self.character.blue(),
       DrawColor::White => self.character.white(),
       DrawColor::Green => self.character.green(),
+      DrawColor::Border => self.character.green(),
       _ => self.character.yellow(),
     }
   }
@@ -29,7 +32,7 @@ pub struct DrawScreen{
   width: u16,
   height: u16,
   // Don't think I need this. We queue commands into stdout anyway.
-  // If we want to abstrac to a different draw interface we'd probably want to implement this step.
+  // If we want to abstract to a different draw interface we'd probably want to implement this step.
   // draw_buffer: Vec<DrawPixel>,
   io: Stdout,
 }
@@ -37,9 +40,28 @@ pub struct DrawScreen{
 impl DrawScreen {
   pub fn new(width: u16, height: u16) -> Self {
     let io = stdout();
+    let mut screen = Self{width, height, io};
     // Let's make sure we clear the draw screen first
     execute!(stdout(), terminal::Clear(terminal::ClearType::All));
-    Self{width, height, io}
+    // Update border of the draw screen
+    // Draw corners of the draw screen
+    screen.update(0, 0, '╔', DrawColor::Border);
+    screen.update(width - 1, 0, '╗', DrawColor::Border);
+    screen.update(width - 1, height, '╝', DrawColor::Border);
+    screen.update(0, height, '╚', DrawColor::Border);
+    // Draw left and right borders.
+    // Divide by 2 because the character we're using is double length
+    for i in 1..height{
+      screen.update(0, i, '║', DrawColor::Border);
+      screen.update(width - 1, i, '║', DrawColor::Border);
+    }
+    // Draw top and bottom border
+    for i in 1..width - 1 {
+      screen.update(i, 0, '═', DrawColor::Border);
+      screen.update(i, height, '═', DrawColor::Border);
+    }
+
+    screen
   }
 
   pub fn draw(&mut self){
