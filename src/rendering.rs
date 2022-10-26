@@ -8,6 +8,7 @@ pub enum DrawColor {
   Red,
   Blue,
   Border,
+  GameBorder,
 }
 
 pub struct DrawPixel{
@@ -23,6 +24,7 @@ impl DrawPixel{
       DrawColor::White => self.character.white(),
       DrawColor::Green => self.character.green(),
       DrawColor::Border => self.character.green(),
+      DrawColor::GameBorder => self.character.dark_yellow(),
       _ => self.character.yellow(),
     }
   }
@@ -31,9 +33,6 @@ impl DrawPixel{
 pub struct DrawScreen{
   width: u16,
   height: u16,
-  // Don't think I need this. We queue commands into stdout anyway.
-  // If we want to abstract to a different draw interface we'd probably want to implement this step.
-  // draw_buffer: Vec<DrawPixel>,
   io: Stdout,
 }
 
