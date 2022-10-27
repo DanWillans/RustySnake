@@ -2,7 +2,7 @@ mod game;
 mod rendering;
 use crossterm::Result;
 use device_query::{DeviceQuery, DeviceState, Keycode};
-use game::{Direction, GameBoard};
+use game::{draw_title_screen, Direction, GameBoard};
 use rendering::{DrawColor, DrawScreen};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
@@ -21,19 +21,15 @@ fn main() -> Result<()> {
     // Setup the DrawScreen which will be used by other components
     let mut draw_screen = DrawScreen::new(screen_width, screen_height);
 
-    // Setup the GameBoard
-    let mut game_board = GameBoard::new(
-        game_board_start_position,
-        game_board_width,
-        game_board_height,
-        &mut draw_screen,
-    );
+    // Draw title screen
+    draw_title_screen((35, 17), &mut draw_screen);
+    draw_screen.draw();
 
     // Setup input from keyboard handling
     let (tx, rx) = mpsc::channel();
     thread::spawn(move || {
         let device_state = DeviceState::new();
-        let mut last_key = &Keycode::Space;
+        let mut last_key = &Keycode::Escape;
         loop {
             let keys: Vec<Keycode> = device_state.get_keys();
             if let Some(key) = keys.last() {
@@ -52,11 +48,34 @@ fn main() -> Result<()> {
                 } else if key == &Keycode::Enter && last_key != &Keycode::Enter {
                     tx.send(Keycode::Enter).unwrap();
                     last_key = &Keycode::Enter;
+                } else if key == &Keycode::Space && last_key != &Keycode::Space {
+                    tx.send(Keycode::Space).unwrap();
+                    last_key = &Keycode::Space;
                 }
             }
             thread::sleep(Duration::from_millis(1));
         }
     });
+
+    // Wait for space bar to be pressed
+    loop {
+        if let Ok(key) = rx.try_recv() {
+            if key == Keycode::Space {
+                break;
+            }
+        }
+        thread::sleep(Duration::from_millis(1));
+    }
+
+    draw_screen.clear();
+
+    // Setup the GameBoard
+    let mut game_board = GameBoard::new(
+        game_board_start_position,
+        game_board_width,
+        game_board_height,
+        &mut draw_screen,
+    );
 
     // Setup required parameters for FPS
     let desired_fps: f64 = 10.0;

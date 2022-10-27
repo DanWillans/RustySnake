@@ -28,13 +28,15 @@ impl DrawPixel{
 }
 
 pub struct DrawScreen{
+  width: u16,
+  height: u16,
   io: Stdout,
 }
 
 impl DrawScreen {
   pub fn new(width: u16, height: u16) -> Self {
     let io = stdout();
-    let mut screen = Self{io};
+    let mut screen = Self{width, height, io};
     // Let's make sure we clear the draw screen first
     if let Err(res) = execute!(stdout(), terminal::Clear(terminal::ClearType::All)) {
       println!("Error clearing terminal {}!", res.to_string());
@@ -78,6 +80,19 @@ impl DrawScreen {
       let c = chars[i] as char;
       self.update(x + (i as u16), y, c, color);
     }
+  }
+
+  pub fn clear(&mut self){
+    for y in 1..self.height {
+      for x in 1..self.width - 1 {
+                self.update(
+                    x,
+                    y,
+                    ' ',
+                    DrawColor::White,
+                );
+            }
+        }
   }
 
 }
