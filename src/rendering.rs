@@ -6,7 +6,6 @@ pub enum DrawColor {
   White,
   Green,
   Red,
-  Blue,
   Border,
   GameBorder,
 }
@@ -20,28 +19,26 @@ impl DrawPixel{
   fn get_stylize(&self) -> StyledContent<char> {
     match &self.color{
       DrawColor::Red => self.character.red(),
-      DrawColor::Blue => self.character.blue(),
       DrawColor::White => self.character.white(),
       DrawColor::Green => self.character.green(),
       DrawColor::Border => self.character.green(),
       DrawColor::GameBorder => self.character.dark_yellow(),
-      _ => self.character.yellow(),
     }
   }
 }
 
 pub struct DrawScreen{
-  width: u16,
-  height: u16,
   io: Stdout,
 }
 
 impl DrawScreen {
   pub fn new(width: u16, height: u16) -> Self {
     let io = stdout();
-    let mut screen = Self{width, height, io};
+    let mut screen = Self{io};
     // Let's make sure we clear the draw screen first
-    execute!(stdout(), terminal::Clear(terminal::ClearType::All));
+    if let Err(res) = execute!(stdout(), terminal::Clear(terminal::ClearType::All)) {
+      println!("Error clearing terminal {}!", res.to_string());
+    }
     // Update border of the draw screen
     // Draw corners of the draw screen
     screen.update(0, 0, '╔', DrawColor::Border);
@@ -64,11 +61,15 @@ impl DrawScreen {
   }
 
   pub fn draw(&mut self){
-    self.io.flush();
+    if let Err(_res) = self.io.flush(){
+      println!("Error flushing to stdout io");
+    }
   }
 
   pub fn update(&mut self, x: u16, y: u16, character: char, color: DrawColor){
-    queue!(self.io, cursor::MoveTo(x,y), style::PrintStyledContent(DrawPixel{character, color}.get_stylize()));
+    if let Err(_res) = queue!(self.io, cursor::MoveTo(x,y), style::PrintStyledContent(DrawPixel{character, color}.get_stylize())) { 
+      println!("Error queueing to stdout io");
+    }
   }
 
   pub fn update_with_string(&mut self, x: u16, y: u16, string: String, color: DrawColor){
