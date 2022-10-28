@@ -1,3 +1,4 @@
+// Copyright (c) 2022 DanWillans
 use crate::{DrawColor, DrawScreen};
 use rand::Rng;
 use std::collections::VecDeque;
@@ -46,8 +47,12 @@ pub struct GameBoard {
 }
 
 pub fn draw_title_screen(position: (u16, u16), screen: &mut DrawScreen) {
-    screen.update_with_string(position.0 + 25, position.1 + 10, "Developed by Dan Willans".to_string(), DrawColor::White);
-    screen.update_with_string(position.0 + 24, position.1 + 15, "Press the space bar to play.".to_string(), DrawColor::White);
+    screen.update_with_string(
+        position.0 + 24,
+        position.1 + 15,
+        "Press the space bar to play.".to_string(),
+        DrawColor::White,
+    );
     let r_datum = position;
     screen.update(r_datum.0, r_datum.1, '╔', DrawColor::GameBorder);
     screen.update(r_datum.0, r_datum.1 + 1, '║', DrawColor::GameBorder);
@@ -280,50 +285,52 @@ impl GameBoard {
             color: DrawColor::Green,
         });
 
-        // Update border of the draw screen
-        // Draw corners of the draw screen
-        screen.update(position.0, position.1, '╔', DrawColor::GameBorder);
-        screen.update(
-            position.0 + width - 1,
-            position.1,
-            '╗',
-            DrawColor::GameBorder,
-        );
-        screen.update(
-            position.0 + width - 1,
-            position.1 + height,
-            '╝',
-            DrawColor::GameBorder,
-        );
-        screen.update(position.0, position.1 + height, '╚', DrawColor::GameBorder);
-        // Draw left and right borders.
-        // Divide by 2 because the character we're using is double length
-        for i in 1..height {
-            screen.update(position.0, position.1 + i, '║', DrawColor::GameBorder);
-            screen.update(
-                position.0 + width - 1,
-                position.1 + i,
-                '║',
-                DrawColor::GameBorder,
-            );
-        }
-        // Draw top and bottom border
-        for i in 1..width - 1 {
-            screen.update(position.0 + i, position.1, '═', DrawColor::GameBorder);
-            screen.update(
-                position.0 + i,
-                position.1 + height,
-                '═',
-                DrawColor::GameBorder,
-            );
-        }
-
-        // Draw the first apple and first snake
+        game_board.draw_border(screen);
         game_board.create_new_food();
         game_board.draw_food(screen);
         game_board.draw_snake(screen);
 
         game_board
+    }
+
+    fn draw_border(&self, screen: &mut DrawScreen) {
+        // Update border of the draw screen
+        // Draw corners of the draw screen
+        screen.update(self.position.0, self.position.1, '╔', DrawColor::GameBorder);
+        screen.update(
+            self.position.0 + self.width - 1,
+            self.position.1,
+            '╗',
+            DrawColor::GameBorder,
+        );
+        screen.update(
+            self.position.0 + self.width - 1,
+            self.position.1 + self.height,
+            '╝',
+            DrawColor::GameBorder,
+        );
+        screen.update(self.position.0, self.position.1 + self.height, '╚', DrawColor::GameBorder);
+        // Draw left and right borders.
+        // Divide by 2 because the character we're using is double length
+        for i in 1..self.height {
+            screen.update(self.position.0, self.position.1 + i, '║', DrawColor::GameBorder);
+            screen.update(
+                self.position.0 + self.width - 1,
+                self.position.1 + i,
+                '║',
+                DrawColor::GameBorder,
+            );
+        }
+        // Draw top and bottom border
+        for i in 1..self.width - 1 {
+            screen.update(self.position.0 + i, self.position.1, '═', DrawColor::GameBorder);
+            screen.update(
+                self.position.0 + i,
+                self.position.1 + self.height,
+                '═',
+                DrawColor::GameBorder,
+            );
+        }
     }
 
     fn clear_game_panel(&self, screen: &mut DrawScreen) {
@@ -535,7 +542,11 @@ impl GameBoard {
                 self.add_food_to_snake();
             }
 
+            // Redrawing everything on every update seems excessive and normally you would only redraw
+            // what's changed. The terminal rendering produces unwanted artifacts due to the way the console
+            // processes some keys so to avoid these artifacts redraw everything.
             self.clear_game_panel(screen);
+            self.draw_border(screen);
             self.draw_score(screen);
             self.draw_food(screen);
             self.draw_snake(screen);

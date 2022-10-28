@@ -1,3 +1,4 @@
+// Copyright (c) 2022 DanWillans
 use std::io::{Write, Stdout, stdout};
 use crossterm::{execute, queue, terminal, cursor, style::{self, Stylize, StyledContent}};
 
@@ -41,25 +42,30 @@ impl DrawScreen {
     if let Err(res) = execute!(stdout(), terminal::Clear(terminal::ClearType::All)) {
       println!("Error clearing terminal {}!", res.to_string());
     }
-    // Update border of the draw screen
-    // Draw corners of the draw screen
-    screen.update(0, 0, '╔', DrawColor::Border);
-    screen.update(width - 1, 0, '╗', DrawColor::Border);
-    screen.update(width - 1, height, '╝', DrawColor::Border);
-    screen.update(0, height, '╚', DrawColor::Border);
-    // Draw left and right borders.
-    // Divide by 2 because the character we're using is double length
-    for i in 1..height{
-      screen.update(0, i, '║', DrawColor::Border);
-      screen.update(width - 1, i, '║', DrawColor::Border);
-    }
-    // Draw top and bottom border
-    for i in 1..width - 1 {
-      screen.update(i, 0, '═', DrawColor::Border);
-      screen.update(i, height, '═', DrawColor::Border);
-    }
+
+    screen.draw_border();
 
     screen
+  }
+
+  pub fn draw_border(&mut self){
+    // Update border of the draw screen
+    // Draw corners of the draw screen
+    self.update(0, 0, '╔', DrawColor::Border);
+    self.update(self.width - 1, 0, '╗', DrawColor::Border);
+    self.update(self.width - 1, self.height, '╝', DrawColor::Border);
+    self.update(0, self.height, '╚', DrawColor::Border);
+    // Draw left and right borders.
+    // Divide by 2 because the character we're using is double length
+    for i in 1..self.height{
+      self.update(0, i, '║', DrawColor::Border);
+      self.update(self.width - 1, i, '║', DrawColor::Border);
+    }
+    // Draw top and bottom border
+    for i in 1..self.width - 1 {
+      self.update(i, 0, '═', DrawColor::Border);
+      self.update(i, self.height, '═', DrawColor::Border);
+    }
   }
 
   pub fn draw(&mut self){

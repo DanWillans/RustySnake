@@ -1,3 +1,4 @@
+// Copyright (c) 2022 DanWillans
 mod game;
 mod rendering;
 use crossterm::Result;
@@ -99,6 +100,7 @@ fn main() -> Result<()> {
             } else if key == Keycode::A {
                 game_board.update_snake_direction(Direction::West);
             } else if key == Keycode::Enter {
+                draw_screen.draw_border();
                 game_board = game_board.reset(&mut draw_screen);
             }
         }
