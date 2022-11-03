@@ -1,5 +1,9 @@
 # RustySnake
-The classic Snake game written in Rust and rendered in the terminal
+The classic Snake game written in Rust and rendered in the terminal.
+
+Good luck and have fun!
+
+Disclaimer: This game was written whilst I was initially learning Rust. Apologies if the code quality is poor or nonidiomatic. 
 
 ### Images
 -------- 
